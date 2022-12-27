@@ -18,12 +18,14 @@ class Scraper
     @events = []
   end
 
-  def call(year:)
-    1.upto(12) do |month|
-      doc = Nokogiri::HTML(URI.open(url(year, month)))
-      event_elements = doc.xpath('//a[@data-info-title]')
-      event_elements.each do |event_element|
-        @events << extract_event_data(event_element)
+  def call(years:)
+    years.each do |year|
+      1.upto(12) do |month|
+        doc = Nokogiri::HTML(URI.open(url(year, month)))
+        event_elements = doc.xpath('//a[@data-info-title]')
+        event_elements.each do |event_element|
+          @events << extract_event_data(event_element)
+        end
       end
     end
 
@@ -125,8 +127,6 @@ class Exporter
   end
 end
 
-2020.upto(Time.now.year + 1) do |year|
-  events = Scraper.new.call(year: year)
-  Exporter.new(events).call(path: "data/calendario-#{year}.json")
-  Exporter.new(events).call(path: "website/public/calendario-#{year}.ical")
-end
+events = Scraper.new.call(years: (Time.now.year - 1)..(Time.now.year + 1))
+Exporter.new(events).call(path: 'website/data/calendario.json')
+Exporter.new(events).call(path: 'website/public/calendario.ical')
